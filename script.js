@@ -95,7 +95,7 @@ const books = [
 let language="bg", selected=null;
 const $=id=>document.getElementById(id);
 let reservations=[];
-try { const saved=JSON.parse(localStorage.getItem("bookconnect-reservations")||"[]"); if(Array.isArray(saved)) reservations=saved.filter(r=>books.some(b=>b.id===r.id)); } catch {}
+try { const saved=JSON.parse(localStorage.getItem("bookconnect-reservations")||"[]"); if(Array.isArray(saved)) { const seen=new Set(); reservations=saved.filter(r=>{ if(!r||typeof r!=="object"||!books.some(b=>b.id===r.id)||!["reserved","borrowed"].includes(r.status)||typeof r.date!=="string"||!Number.isFinite(Date.parse(r.date))||seen.has(r.id))return false; seen.add(r.id); return true; }); } } catch {}
 const tr=(bg,en)=>language==="bg"?bg:en;
 const t=key=>translations[language][key]||key;
 const normalize=value=>String(value).toLocaleLowerCase("bg-BG").trim();
