@@ -98,13 +98,29 @@ let reservations=[];
 try { const saved=JSON.parse(localStorage.getItem("bookconnect-reservations")||"[]"); if(Array.isArray(saved)) { const seen=new Set(); reservations=saved.filter(r=>{ if(!r||typeof r!=="object"||!books.some(b=>b.id===r.id)||!["reserved","borrowed"].includes(r.status)||typeof r.date!=="string"||!Number.isFinite(Date.parse(r.date))||seen.has(r.id))return false; seen.add(r.id); return true; }); } } catch {}
 const tr=(bg,en)=>language==="bg"?bg:en;
 const t=key=>translations[language][key]||key;
-const normalize=value=>String(value).toLocaleLowerCase("bg-BG").trim();
+const normalize=value=>String(value).normalize("NFC").toLocaleLowerCase("bg-BG").trim();
 const available=b=>b.available&&!reservations.some(r=>r.id===b.id);
 function save(next){try{localStorage.setItem("bookconnect-reservations",JSON.stringify(next));reservations=next;return true;}catch{notify(tr("Записът е неуспешен.","Unable to save."));return false;}}
 function notify(message){$("notice").textContent=message;$("notice").style.display="block";clearTimeout(notify.timer);notify.timer=setTimeout(()=>$("notice").style.display="none",3000);}
 function element(tag,text,cls){const el=document.createElement(tag);el.textContent=text;if(cls)el.className=cls;return el;}
 function button(text,action){const b=element("button",text,"btn");b.type="button";b.addEventListener("click",action);return b;}
-function rankBooks(items,query){const q=normalize(query);return items.map(b=>({b,score:!q?0:(normalize(b.title)===q?100:normalize(b.title).startsWith(q)?50:normalize(b.title).includes(q)?30:0)+(normalize(b.author).includes(q)?20:0)+(normalize(t(b.genre)).includes(q)?10:0)})).filter(x=>!q||x.score>0).sort((a,b)=>b.score-a.score||Number(available(b.b))-Number(available(a.b))||a.b.id-b.b.id).map(x=>x.b);}
+function rankBooks(items,query){
+  const q=normalize(query).replace(/\s+/g," ");
+  const terms=q.split(" ").filter(Boolean);
+  return items.map(b=>{
+    const title=normalize(b.title),author=normalize(b.author);
+    const genres=[normalize(translations.bg[b.genre]||b.genre),normalize(translations.en[b.genre]||b.genre)];
+    let score=q&&title===q?100:0;
+    for(const term of terms){
+      if(title.startsWith(term))score+=50;
+      else if(title.includes(term))score+=30;
+      else if(author.includes(term))score+=20;
+      else if(genres.some(g=>g.includes(term)))score+=10;
+      else return {b,score:-1};
+    }
+    return {b,score};
+  }).filter(x=>x.score>=0).sort((a,b)=>b.score-a.score||Number(available(b.b))-Number(available(a.b))||a.b.id-b.b.id).map(x=>x.b);
+}
 function displayBooks(){const q=$("catalogSearch").value,g=$("genreFilter").value,a=$("availabilityFilter").value;const items=rankBooks(books.filter(b=>(g==="all"||b.genre===g)&&(a!=="available"||available(b))),q);$("bookGrid").replaceChildren();$("noResults").style.display=items.length?"none":"block";for(const b of items){const card=element("article","","book-card");card.append(element("h3",b.title),element("p",b.author,"author"),element("span",t(b.genre),"tag"),element("p",available(b)?tr("Налична","Available"):tr("Заета","Unavailable"),available(b)?"available":"unavailable"),button(tr("Подробности","Details"),()=>openBook(b)));$("bookGrid").append(card);}}
 function heroSearch(){$("catalogSearch").value=$("heroSearch").value;displayBooks();$("catalog").scrollIntoView();}
 function openBook(b){selected=b;$("modalTitle").textContent=b.title;$("modalAuthor").textContent=b.author;$("modalGenre").textContent=t(b.genre);$("modalDescription").textContent="";$("modalCover").hidden=true;$("modalCover").style.display="none";$("modalAvailable").textContent=available(b)?tr("Налична","Available"):tr("Заета","Unavailable");$("reserveBtn").textContent=t("reserve");$("reserveBtn").disabled=!available(b);$("bookModal").classList.add("open");}
