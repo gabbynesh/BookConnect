@@ -220,20 +220,22 @@ function renderPersonalLibrary() {
 function renderPersonalDetails(book) {
   const root=document.getElementById("personalDetails");if(!root)return;
   root.replaceChildren();
+  const section=(bg,en)=>{const el=personalElement("section",undefined,"detail-section");el.append(personalElement("h3",personalText(bg,en)));root.append(el);return el;};
+  const reading=section("Онлайн четене","Online reading"), progress=section("Моят напредък","My reading progress"), reviews=section("Моята оценка и ревю","My rating and review");
   const id=personalLibrary.id(book),s=personalLibrary.read(),year=String(new Date().getFullYear());
   const finished=Array.isArray(s.finished[year])&&s.finished[year].includes(id);
-  root.append(personalButton(finished?personalText("Отмени прочетена","Undo finished"):personalText("Отбележи като прочетена","Mark as finished"),async()=>{
+  progress.append(personalButton(finished?personalText("Отмени прочетена","Undo finished"):personalText("Отбележи като прочетена","Mark as finished"),async()=>{
     if(await personalLibrary.markFinished(book,year,finished)){if(root.contains(rating))renderPersonalDetails(book);renderPersonalLibrary();}
   }));
   const review=s.reviews[id]||{};
   const rating=personalElement("select");rating.setAttribute("aria-label",personalText("Оценка","Rating"));
   for(let i=1;i<=5;i++){const o=personalElement("option",i+" ★");o.value=String(i);rating.append(o);}rating.value=String(review.rating||5);
   const comment=personalElement("textarea");comment.maxLength=500;comment.value=typeof review.comment==="string"?review.comment:"";comment.placeholder=personalText("Лично ревю","Private review");comment.setAttribute("aria-label",comment.placeholder);
-  root.append(personalElement("h3",personalText("Моята оценка и ревю","My rating and review")),rating,comment,
+  reviews.append(rating,comment,
     personalButton(personalText("Запази ревю","Save review"),async()=>{if(await personalLibrary.saveReview(book,{rating:Number(rating.value),comment:comment.value.trim()}))showNotice(personalText("Ревюто е запазено.","Review saved."));}),
     personalButton(personalText("Изтрий ревю","Delete review"),async()=>{if(await personalLibrary.saveReview(book,null)&&root.contains(comment))renderPersonalDetails(book);}));
   const source = publicBookSource(book);
-  if (source) { const link=personalElement("a",personalText("Пълно издание и PDF — Читанка","Full Bulgarian edition and PDF — Chitanka"),"btn btn-outline"); link.href=source;link.target="_blank";link.rel="noopener noreferrer";root.append(link); }
+  if (source) { const link=personalElement("a",personalText("Пълно издание и PDF — Читанка","Full Bulgarian edition and PDF — Chitanka"),"btn btn-outline"); link.href=source;link.target="_blank";link.rel="noopener noreferrer";reading.append(link); }
   const reader = personalButton(personalText("Чети онлайн (PDF)","Read online (PDF)"),async()=>{
     const owner=currentUser?.id;
     if(!owner)return;
@@ -249,7 +251,7 @@ function renderPersonalDetails(book) {
     finally{reader.disabled=false;}
   });
   reader.disabled=!currentUser;
-  root.append(reader,personalElement("p",currentUser?personalText("Достъпът зависи от наличното издание и Premium статуса.","Access depends on edition availability and Premium status."):personalText("Влез в акаунта си за онлайн четене.","Sign in to read online.")));
+  reading.append(reader,personalElement("p",currentUser?personalText("Достъпът зависи от наличното издание и Premium статуса.","Access depends on edition availability and Premium status."):personalText("Влез в акаунта си за онлайн четене.","Sign in to read online.")));
 }
 function updateSearchSuggestions() {
   const input=document.getElementById("catalogSearch"),list=document.getElementById("catalogSuggestions");if(!input||!list)return;
