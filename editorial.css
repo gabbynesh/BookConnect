@@ -90,3 +90,10 @@ html:not([data-theme="dark"]) .personal-panel.personal-premium{background:linear
  #mainNavigation a{padding:12px 8px;font-size:15px;text-align:left}
  header .nav-right{order:2;flex-basis:100%;justify-content:flex-start}
 }
+
+#bookModal .modal-content{width:min(94vw,850px);max-width:850px;max-height:90vh;overflow:auto;background:var(--bc-bg);color:var(--bc-foreground);padding:clamp(16px,3vw,32px)}
+.book-detail-overview{display:grid;grid-template-columns:minmax(110px,190px) minmax(0,1fr);gap:24px;align-items:start;margin:16px 0 24px}
+#bookModal .modal-cover{width:100%;height:auto;aspect-ratio: .72;object-fit:cover;border-radius:8px;margin:0}
+.book-detail-info p{margin:0 0 12px;line-height:1.55}.book-detail-info #modalAuthor{font-family:Georgia,serif;font-size:1.25rem;font-style:italic}
+#personalDetails{display:grid;gap:14px}.detail-section{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:18px;border:1px solid var(--bc-link);border-radius:12px}.detail-section h3{flex-basis:100%;font-family:Georgia,serif;margin:0 0 6px}.detail-section p,.detail-section textarea{flex-basis:100%;margin:0}.detail-section textarea{min-height:90px;resize:vertical}.detail-section select,.detail-section textarea{background:var(--bc-bg);color:var(--bc-foreground);border:1px solid var(--bc-link);border-radius:8px;padding:10px}.detail-section button,.detail-section a{max-width:100%;white-space:normal}
+@media(max-width:480px){.book-detail-overview{grid-template-columns:100px minmax(0,1fr);gap:12px}.detail-section{padding:12px}.detail-section button,.detail-section a{width:100%}}
